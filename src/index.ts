@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { Command } from "commander";
+import { PersonaStorage, Persona } from "./storage.js";
 
 // Parse CLI arguments using commander
 const program = new Command()
@@ -42,7 +43,8 @@ const CLI_PORT = (() => {
 })();
 
 // Global persona state
-let currentPersona: any = null;
+let currentPersona: Persona | null = null;
+let personaStorage: PersonaStorage;
 
 // Function to echo current persona
 function echoCurrentPersona() {
@@ -70,25 +72,11 @@ function createServerInstance() {
       include_metadata: z.boolean().optional().describe("Include metadata in response"),
     },
     async ({ include_metadata }) => {
-      const personas = [
-        {
-          id: "tech-expert",
-          name: "Tech Expert",
-          description: "Technical expert with deep knowledge of software development",
-          expertise: ["Python", "JavaScript", "System Architecture"],
-          communication_style: "Technical and precise",
-        },
-        {
-          id: "creative-writer",
-          name: "Creative Writer",
-          description: "Creative writer with expertise in storytelling and content creation",
-          expertise: ["Creative Writing", "Content Strategy", "Storytelling"],
-          communication_style: "Engaging and narrative-driven",
-        },
-      ];
+      const personas = personaStorage.getAllPersonas();
+      const stats = personaStorage.getStatistics();
 
       const result = include_metadata
-        ? { personas, metadata: { total: personas.length, timestamp: new Date().toISOString() } }
+        ? { personas, metadata: stats }
         : { personas };
 
       return {
@@ -110,25 +98,41 @@ function createServerInstance() {
       context: z.string().optional().describe("Additional context"),
     },
     async ({ task_description, context }) => {
-      // Simple persona selection logic
-      let selectedPersona = {
-        id: "tech-expert",
-        name: "Tech Expert",
-        confidence: 0.8,
-        reason: "Default technical persona",
-      };
+      const personas = personaStorage.getAllPersonas();
+      
+      // Simple persona selection logic (can be enhanced with AI later)
+      let selectedPersona = personas[0]; // Default to first persona
+      let confidence = 0.5;
+      let reason = "Default selection";
 
-      if (
-        task_description.toLowerCase().includes("creative") ||
-        task_description.toLowerCase().includes("writing") ||
-        task_description.toLowerCase().includes("story")
-      ) {
-        selectedPersona = {
-          id: "creative-writer",
-          name: "Creative Writer",
-          confidence: 0.9,
-          reason: "Task involves creative writing or storytelling",
-        };
+      // Search for better matches based on task description
+      const searchTerm = task_description.toLowerCase();
+      
+      for (const persona of personas) {
+        let score = 0;
+        
+        // Check expertise matches
+        for (const expertise of persona.expertise) {
+          if (searchTerm.includes(expertise.toLowerCase())) {
+            score += 2;
+          }
+        }
+        
+        // Check description matches
+        if (persona.description.toLowerCase().includes(searchTerm)) {
+          score += 1;
+        }
+        
+        // Check context matches
+        if (persona.context && persona.context.toLowerCase().includes(searchTerm)) {
+          score += 1.5;
+        }
+        
+        if (score > confidence) {
+          selectedPersona = persona;
+          confidence = score;
+          reason = `Matched expertise: ${persona.expertise.join(", ")}`;
+        }
       }
 
       // Set current persona and echo it
@@ -139,7 +143,12 @@ function createServerInstance() {
         content: [
           {
             type: "text",
-            text: JSON.stringify(selectedPersona, null, 2),
+            text: JSON.stringify({
+              id: selectedPersona.id,
+              name: selectedPersona.name,
+              confidence: Math.min(confidence / 3, 1), // Normalize to 0-1
+              reason,
+            }, null, 2),
           },
         ],
       };
@@ -148,10 +157,9 @@ function createServerInstance() {
 
   // Tool: Get persona statistics
   server.tool("get_persona_statistics", {}, async () => {
-    const stats = {
-      total_personas: 2,
-      categories: ["technical", "creative"],
-      last_updated: new Date().toISOString(),
+    const stats = personaStorage.getStatistics();
+    const result = {
+      ...stats,
       current_persona: currentPersona,
     };
 
@@ -159,7 +167,7 @@ function createServerInstance() {
       content: [
         {
           type: "text",
-          text: JSON.stringify(stats, null, 2),
+          text: JSON.stringify(result, null, 2),
         },
       ],
     };
@@ -195,24 +203,7 @@ function createServerInstance() {
       persona_id: z.string().describe("ID of the persona to set"),
     },
     async ({ persona_id }) => {
-      const personas = [
-        {
-          id: "tech-expert",
-          name: "Tech Expert",
-          description: "Technical expert with deep knowledge of software development",
-          expertise: ["Python", "JavaScript", "System Architecture"],
-          communication_style: "Technical and precise",
-        },
-        {
-          id: "creative-writer",
-          name: "Creative Writer",
-          description: "Creative writer with expertise in storytelling and content creation",
-          expertise: ["Creative Writing", "Content Strategy", "Storytelling"],
-          communication_style: "Engaging and narrative-driven",
-        },
-      ];
-
-      const persona = personas.find((p) => p.id === persona_id);
+      const persona = personaStorage.getPersona(persona_id);
       if (persona) {
         currentPersona = persona;
         echoCurrentPersona();
@@ -237,10 +228,172 @@ function createServerInstance() {
     },
   );
 
+  // NEW TOOL: Create new persona
+  server.tool(
+    "create_persona",
+    {
+      name: z.string().describe("Name of the persona"),
+      description: z.string().describe("Description of the persona"),
+      expertise: z.array(z.string()).describe("Areas of expertise"),
+      communication_style: z.string().describe("Communication style"),
+      context: z.string().optional().describe("Context for when to use this persona"),
+      personality_traits: z.array(z.string()).optional().describe("Personality traits"),
+      id: z.string().optional().describe("Custom ID for the persona (auto-generated if not provided)"),
+    },
+    async (personaData) => {
+      try {
+        const persona = await personaStorage.createPersona(personaData);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, persona }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: (error as Error).message }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // NEW TOOL: Update existing persona
+  server.tool(
+    "update_persona",
+    {
+      persona_id: z.string().describe("ID of the persona to update"),
+      name: z.string().optional().describe("New name for the persona"),
+      description: z.string().optional().describe("New description for the persona"),
+      expertise: z.array(z.string()).optional().describe("New areas of expertise"),
+      communication_style: z.string().optional().describe("New communication style"),
+      context: z.string().optional().describe("New context for when to use this persona"),
+      personality_traits: z.array(z.string()).optional().describe("New personality traits"),
+    },
+    async ({ persona_id, ...updates }) => {
+      try {
+        const persona = await personaStorage.updatePersona(persona_id, updates);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, persona }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: (error as Error).message }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // NEW TOOL: Delete persona
+  server.tool(
+    "delete_persona",
+    {
+      persona_id: z.string().describe("ID of the persona to delete"),
+    },
+    async ({ persona_id }) => {
+      try {
+        await personaStorage.deletePersona(persona_id);
+        
+        // Clear current persona if it was deleted
+        if (currentPersona?.id === persona_id) {
+          currentPersona = null;
+          console.error("🎭 Current persona was deleted, clearing selection");
+        }
+        
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, message: `Persona '${persona_id}' deleted successfully` }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: (error as Error).message }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // NEW TOOL: Search personas
+  server.tool(
+    "search_personas",
+    {
+      query: z.string().describe("Search query to find matching personas"),
+    },
+    async ({ query }) => {
+      const results = personaStorage.searchPersonas(query);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({ results, count: results.length }, null, 2),
+          },
+        ],
+      };
+    },
+  );
+
+  // NEW TOOL: Get persona by ID
+  server.tool(
+    "get_persona",
+    {
+      persona_id: z.string().describe("ID of the persona to retrieve"),
+    },
+    async ({ persona_id }) => {
+      const persona = personaStorage.getPersona(persona_id);
+      if (persona) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, persona }, null, 2),
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: `Persona with ID '${persona_id}' not found` }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
   return server;
 }
 
 async function main() {
+  // Initialize persona storage
+  personaStorage = new PersonaStorage();
+  await personaStorage.initialize();
+
   const server = createServerInstance();
 
   if (TRANSPORT_TYPE === "stdio") {

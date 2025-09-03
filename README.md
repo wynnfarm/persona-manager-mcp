@@ -122,6 +122,48 @@ Manually set a specific persona by ID.
 **Parameters:**
 - `persona_id` (string, required): ID of the persona to set
 
+### `create_persona` ✨ NEW
+Create a new persona with dynamic storage.
+
+**Parameters:**
+- `name` (string, required): Name of the persona
+- `description` (string, required): Description of the persona
+- `expertise` (array of strings, required): Areas of expertise
+- `communication_style` (string, required): Communication style
+- `context` (string, optional): Context for when to use this persona
+- `personality_traits` (array of strings, optional): Personality traits
+- `id` (string, optional): Custom ID (auto-generated if not provided)
+
+### `update_persona` ✨ NEW
+Update an existing persona.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona to update
+- `name` (string, optional): New name for the persona
+- `description` (string, optional): New description for the persona
+- `expertise` (array of strings, optional): New areas of expertise
+- `communication_style` (string, optional): New communication style
+- `context` (string, optional): New context for when to use this persona
+- `personality_traits` (array of strings, optional): New personality traits
+
+### `delete_persona` ✨ NEW
+Delete a persona.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona to delete
+
+### `search_personas` ✨ NEW
+Search for personas by name, description, or expertise.
+
+**Parameters:**
+- `query` (string, required): Search query to find matching personas
+
+### `get_persona` ✨ NEW
+Get a specific persona by ID.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona to retrieve
+
 ## 🎭 Global Persona Echo
 
 The Persona Manager includes a global echo feature that automatically displays which persona is currently active. When a persona is selected or used, it will echo:
@@ -131,6 +173,40 @@ The Persona Manager includes a global echo feature that automatically displays w
    Description: Technical expert with deep knowledge of software development
    Expertise: Python, JavaScript, System Architecture
    Communication Style: Technical and precise
+```
+
+## 💾 Dynamic Persona Storage ✨ NEW
+
+The Persona Manager now supports dynamic persona storage with file-based persistence:
+
+### **Features:**
+- **Persistent Storage**: Personas are saved to `personas/personas.json`
+- **Automatic Loading**: Loads existing personas on startup
+- **Fallback System**: Falls back to default personas if storage is unavailable
+- **Validation**: Ensures persona data integrity with schema validation
+- **Real-time Updates**: Changes are immediately saved to disk
+
+### **Storage Structure:**
+```
+personas/
+├── personas.json          # User-created personas (auto-generated)
+├── default_personas.json  # Default personas (fallback)
+└── metadata.json         # Storage metadata
+```
+
+### **Example Usage:**
+```bash
+# Create a new persona
+create_persona --name "Data Scientist" --description "Expert in data analysis and ML" --expertise "Python,Statistics,Machine Learning" --communication_style "Analytical and data-driven"
+
+# Update an existing persona
+update_persona --persona_id "data-scientist" --expertise "Python,Statistics,Machine Learning,Deep Learning"
+
+# Search for personas
+search_personas --query "machine learning"
+
+# Delete a persona
+delete_persona --persona_id "old-persona"
 ```
 
 ## 📁 Project Structure

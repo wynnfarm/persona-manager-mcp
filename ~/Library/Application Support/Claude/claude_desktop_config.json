@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "persona-server": {
+      "command": "docker-compose",
+      "args": [
+        "run",
+        "--rm",
+        "mcp-persona-server"
+      ],
+      "cwd": "/Users/wynnfarm/dev/persona-manager-mcp"
+    }
+  }
+}
+
+
+
+
+
+

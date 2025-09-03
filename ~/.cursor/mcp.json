@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "context-manager": {
+      "command": "python",
+      "args": ["/Users/wynnfarm/dev/context-manager-mcp/run_context_mcp.py"],
+      "env": {
+        "PYTHONPATH": "/Users/wynnfarm/dev/context-manager-mcp"
+      }
+    },
+    "context7": {
+      "command": "docker",
+      "args": ["exec", "-i", "mcp-context7-stdio", "node", "dist/index.js", "--transport", "stdio"],
+      "env": {}
+    },
+    "persona-manager": {
+      "command": "node",
+      "args": ["/Users/wynnfarm/dev/persona-manager-mcp/dist/index.js", "--transport", "stdio"],
+      "env": {},
+      "cwd": "/Users/wynnfarm/dev/persona-manager-mcp"
+    }
+  }
+}

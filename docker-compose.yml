@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  # Context Manager Service (using standalone database)
+  context-manager:
+    image: context-manager:latest
+    container_name: context-manager
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://context_user:context_pass@host.docker.internal:5432/context_manager
+      - STORAGE_TYPE=postgresql
+      - CONTEXT_PROJECT_NAME=persona-manager-mcp
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MCP Persona Server (JSON-RPC)
+  mcp-persona-server:
+    build: .
+    container_name: mcp-persona-server
+    image: mcp-persona-server:latest
+    volumes:
+      # Mount personas directory for persistence
+      - ./personas:/app/personas
+      # Mount config for customization
+      - ./config.json:/app/config.json:ro
+      # Mount the JSON-RPC server file
+      - ./persona_manager_jsonrpc_server.py:/app/persona_manager_jsonrpc_server.py:ro
+    environment:
+      - PERSONA_STORAGE_PATH=/app/personas
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - CONTEXT_MANAGER_URL=http://context-manager-mcp:8000
+      - CONTEXT_PROJECT_NAME=persona-manager-mcp
+    # For MCP stdio communication, we don't expose ports
+    restart: unless-stopped
+    # Run in interactive mode for stdio communication
+    stdin_open: true
+    tty: true
+    # Use the JSON-RPC server as the entrypoint
+    command: ["python", "persona_manager_jsonrpc_server.py"]
+
+  # Persona Manager HTTP Server
+  persona-manager-http:
+    build: .
+    container_name: persona-manager-http
+    image: mcp-persona-server:latest
+    ports:
+      - "8002:8002"
+    volumes:
+      # Mount personas directory for persistence
+      - ./personas:/app/personas
+      # Mount config for customization
+      - ./config.json:/app/config.json:ro
+      # Mount static files for dashboard
+      - ./static:/app/static
+    environment:
+      - PERSONA_STORAGE_PATH=/app/personas
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - HOST=0.0.0.0
+      - PORT=8002
+      - CONTEXT_MANAGER_URL=http://context-manager-mcp:8000
+      - CONTEXT_PROJECT_NAME=persona-manager-mcp
+    networks:
+      - context_manager_default
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: ["python", "http_server.py"]
+
+  # Optional: Add a development service with hot reloading
+  mcp-persona-server-dev:
+    build: .
+    container_name: mcp-persona-server-dev
+    image: mcp-persona-server:dev
+    volumes:
+      # Mount source code for development
+      - .:/app
+      - ./personas:/app/personas
+      - ./config.json:/app/config.json:ro
+    environment:
+      - PERSONA_STORAGE_PATH=/app/personas
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=development
+    profiles:
+      - dev
+    # For development, you might want to run with additional tools
+    command: ["python", "persona_manager_jsonrpc_server.py"]
+
+networks:
+  context_manager_default:
+    external: true

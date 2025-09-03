@@ -1,0 +1,28 @@
+{
+  "server": {
+    "name": "persona-server",
+    "version": "0.1.0",
+    "description": "MCP server for managing AI personas"
+  },
+  "storage": {
+    "path": "./personas",
+    "backup_path": "./backups",
+    "auto_backup": true,
+    "backup_interval_hours": 24
+  },
+  "personas": {
+    "default_personas": true,
+    "max_personas": 100,
+    "auto_cleanup": false
+  },
+  "matching": {
+    "similarity_threshold": 0.3,
+    "max_suggestions": 5,
+    "enable_keyword_extraction": true
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "./logs/persona_server.log"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_name": "mcp-experiments",
+  "current_goal": "",
+  "completed_features": [],
+  "current_issues": [],
+  "next_steps": [],
+  "current_state": {},
+  "key_files": [],
+  "context_anchors": [
+    {
+      "key": "DOCKER_IMAGE",
+      "value": "mcp-persona-server:latest",
+      "description": "Docker image name",
+      "priority": 1,
+      "created_at": "2025-08-30T14:08:02.855412"
+    }
+  ],
+  "last_updated": "2025-08-30T14:08:02.855413"
+}

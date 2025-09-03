@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persona Manager Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Root div for enhanced dashboard -->
+    <div id="root"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-800 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-3">
+          <div class="flex items-center space-x-8">
+            <a
+              href="http://localhost:8000/dashboard"
+              class="flex items-center text-gray-300 hover:text-blue-300 transition-colors"
+            >
+              <i class="fas fa-chart-line text-gray-400 mr-2"></i>
+              <span>Context Manager</span>
+            </a>
+            <a href="http://localhost:8002/" class="flex items-center text-white hover:text-blue-300 transition-colors">
+              <i class="fas fa-user-tie text-blue-400 mr-2"></i>
+              <span class="font-semibold">Persona Manager</span>
+            </a>
+            <a
+              href="http://localhost:8002/editor"
+              class="flex items-center text-gray-300 hover:text-blue-300 transition-colors"
+            >
+              <i class="fas fa-edit text-gray-400 mr-2"></i>
+              <span>Persona Editor</span>
+            </a>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-400">Persona Dashboard</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center">
+            <i class="fas fa-user-tie text-purple-600 text-2xl mr-3"></i>
+            <h1 class="text-2xl font-bold text-gray-900">Persona Manager Dashboard</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button
+              id="refresh-btn"
+              class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center"
+            >
+              <i class="fas fa-sync-alt mr-2"></i>
+              Refresh
+            </button>
+            <p id="last-updated" class="text-sm text-gray-500"></p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Overview Stats -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">📊 Overview Statistics</h2>
+        <p class="text-sm text-gray-600 mb-6">
+          Key metrics showing how the persona system is performing and being used.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="text-center">
+            <div class="flex items-center justify-center mb-2">
+              <i class="fas fa-users text-purple-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-600">Total Personas</p>
+            <p id="total-personas" class="text-3xl font-bold text-gray-900">-</p>
+            <p class="text-xs text-gray-500 mt-1">Available personas in the system</p>
+          </div>
+          <div class="text-center">
+            <div class="flex items-center justify-center mb-2">
+              <i class="fas fa-mouse-pointer text-purple-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-600">Total Selections</p>
+            <p id="total-selections" class="text-3xl font-bold text-gray-900">-</p>
+            <p class="text-xs text-gray-500 mt-1">Times personas have been selected</p>
+          </div>
+          <div class="text-center">
+            <div class="flex items-center justify-center mb-2">
+              <i class="fas fa-bullseye text-purple-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-600">Avg Confidence</p>
+            <p id="avg-confidence" class="text-3xl font-bold text-gray-900">-</p>
+            <p class="text-xs text-gray-500 mt-1">Average confidence score (0-1)</p>
+          </div>
+          <div class="text-center">
+            <div class="flex items-center justify-center mb-2">
+              <i class="fas fa-robot text-purple-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-600">Auto Generated</p>
+            <p id="auto-generated" class="text-3xl font-bold text-gray-900">-</p>
+            <p class="text-xs text-gray-500 mt-1">Personas created automatically</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Lists Section -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">📈 Usage Analytics</h2>
+        <p class="text-sm text-gray-600 mb-6">
+          Detailed breakdown of how personas are being used across different categories and domains.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Persona Usage List -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">👥 Persona Usage</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              Shows which personas are selected most frequently. The progress bar indicates relative usage compared to
+              the most-used persona.
+            </p>
+            <div id="persona-usage-list" class="space-y-3">
+              <p class="text-gray-500 text-center py-4">No persona usage data</p>
+            </div>
+          </div>
+
+          <!-- Task Categories List -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 Task Categories</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              Shows the types of tasks being performed (technical, creative, business, etc.). Helps identify which task
+              types are most common.
+            </p>
+            <div id="task-categories-list" class="space-y-3">
+              <p class="text-gray-500 text-center py-4">No task category data</p>
+            </div>
+          </div>
+
+          <!-- Domains List -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">🌐 Domains</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              Shows the subject domains of tasks (technology, business, science, etc.). Automatically detected from task
+              descriptions.
+            </p>
+            <div id="domains-list" class="space-y-3">
+              <p class="text-gray-500 text-center py-4">No domain data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Selections -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">🕒 Recent Selections</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          The last 10 persona selections made by the system. Shows task description, selected persona, confidence score,
+          and domain.
+        </p>
+        <div id="recent-selections" class="space-y-3">
+          <p class="text-gray-500 text-center py-8">No recent selections</p>
+        </div>
+      </div>
+
+      <!-- Test Persona Selection -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">🧪 Test Persona Selection</h3>
+        <p class="text-sm text-gray-600 mb-6">
+          Test the persona selection system by entering a task description and domain. The system will automatically
+          select the most appropriate persona and show the reasoning.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Task Description</label>
+            <p class="text-xs text-gray-500 mb-2">
+              Describe what you want to accomplish (e.g., "Write a Python script for data analysis")
+            </p>
+            <input
+              type="text"
+              id="task-description"
+              placeholder="Enter a task description"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+            <p class="text-xs text-gray-500 mb-2">
+              Select the subject area (optional - system will auto-detect if left as "general")
+            </p>
+            <select
+              id="task-domain"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="general">General</option>
+              <option value="coding">Coding</option>
+              <option value="analysis">Analysis</option>
+              <option value="writing">Writing</option>
+              <option value="design">Design</option>
+            </select>
+          </div>
+        </div>
+        <button
+          id="test-selection-btn"
+          class="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+        >
+          Test Persona Selection
+        </button>
+        <p class="text-xs text-gray-500 mt-2">Click to see which persona the system selects and why</p>
+
+        <div id="selection-result" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
+          <h4 class="font-semibold text-gray-900 mb-2">Selection Result:</h4>
+          <p class="text-xs text-gray-600 mb-3">
+            Shows the selected persona, confidence score, task category, and reasoning behind the selection.
+          </p>
+          <div id="result-content"></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      class PersonaDashboard {
+        constructor() {
+          this.apiBase = "";
+          this.refreshInterval = 120000; // 2 minutes (increased from 30 seconds)
+          this.isRefreshing = false;
+          this.isScrolling = false;
+          this.scrollTimeout = null;
+          this.init();
+        }
+
+        init() {
+          this.setupScrollOptimization();
+          this.loadDashboard();
+          this.startAutoRefresh();
+          this.setupEventListeners();
+        }
+
+        setupEventListeners() {
+          document.getElementById("refresh-btn").addEventListener("click", () => {
+            this.loadDashboard();
+          });
+
+          document.getElementById("test-selection-btn").addEventListener("click", () => {
+            this.testPersonaSelection();
+          });
+        }
+
+        setupScrollOptimization() {
+          // Throttle scroll events to improve performance
+          let ticking = false;
+
+          const handleScroll = () => {
+            if (!ticking) {
+              requestAnimationFrame(() => {
+                this.isScrolling = true;
+                if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+                this.scrollTimeout = setTimeout(() => {
+                  this.isScrolling = false;
+                }, 150);
+                ticking = false;
+              });
+              ticking = true;
+            }
+          };
+
+          window.addEventListener("scroll", handleScroll, { passive: true });
+        }
+
+        async loadDashboard() {
+          // Prevent multiple simultaneous refreshes
+          if (this.isRefreshing) {
+            console.log("Dashboard refresh already in progress, skipping...");
+            return;
+          }
+
+          this.isRefreshing = true;
+
+          try {
+            const [analyticsData, personasData] = await Promise.all([this.fetchAnalytics(), this.fetchPersonas()]);
+
+            this.renderDashboard(analyticsData, personasData);
+            this.lastUpdate = new Date();
+            this.updateLastUpdated();
+          } catch (error) {
+            console.error("Error loading dashboard:", error);
+            this.showError(error.message);
+          } finally {
+            this.isRefreshing = false;
+          }
+        }
+
+        async fetchAnalytics() {
+          const response = await fetch("/analytics");
+          if (!response.ok) throw new Error("Failed to fetch analytics");
+          const data = await response.json();
+          return data.data;
+        }
+
+        async fetchPersonas() {
+          const response = await fetch("/personas");
+          if (!response.ok) throw new Error("Failed to fetch personas");
+          const data = await response.json();
+          return data.data;
+        }
+
+        renderDashboard(analytics, personas) {
+          // Update stats
+          document.getElementById("total-personas").textContent = personas.count || 0;
+          document.getElementById("total-selections").textContent = analytics.total_selections || 0;
+          document.getElementById("avg-confidence").textContent = (analytics.average_confidence || 0).toFixed(1);
+          document.getElementById("auto-generated").textContent = analytics.auto_generated_used || 0;
+
+          // Render data lists
+          this.renderPersonaUsageList(analytics.persona_usage || {});
+          this.renderTaskCategoriesList(analytics.task_categories || {});
+          this.renderDomainsList(analytics.domains || {});
+          this.renderRecentSelections(analytics.recent_selections || []);
+        }
+
+        renderPersonaUsageList(personaUsage) {
+          try {
+            const container = document.getElementById("persona-usage-list");
+            if (!container) {
+              console.error("Persona usage list container not found");
+              return;
+            }
+
+            const entries = Object.entries(personaUsage);
+
+            if (entries.length === 0) {
+              container.innerHTML = '<p class="text-gray-500 text-center py-4">No persona usage data</p>';
+              return;
+            }
+
+            // Sort by usage count (descending)
+            entries.sort(([, a], [, b]) => b - a);
+
+            const html = entries
+              .map(
+                ([persona, count]) => `
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                  <span class="font-medium text-gray-900">${persona}</span>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-sm text-gray-600 mr-2">${count} uses</span>
+                  <div class="w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-500 h-2 rounded-full" style="width: ${Math.min(
+                      100,
+                      (count / Math.max(...Object.values(personaUsage))) * 100,
+                    )}%"></div>
+                  </div>
+                </div>
+              </div>
+            `,
+              )
+              .join("");
+
+            container.innerHTML = html;
+          } catch (error) {
+            console.error("Error rendering persona usage list:", error);
+          }
+        }
+
+        renderTaskCategoriesList(taskCategories) {
+          try {
+            const container = document.getElementById("task-categories-list");
+            if (!container) {
+              console.error("Task categories list container not found");
+              return;
+            }
+
+            const entries = Object.entries(taskCategories);
+
+            if (entries.length === 0) {
+              container.innerHTML = '<p class="text-gray-500 text-center py-4">No task category data</p>';
+              return;
+            }
+
+            // Sort by count (descending)
+            entries.sort(([, a], [, b]) => b - a);
+
+            const colors = ["bg-purple-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-red-500"];
+            const maxCount = Math.max(...Object.values(taskCategories));
+
+            const html = entries
+              .map(
+                ([category, count], index) => `
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 ${colors[index % colors.length]} rounded-full mr-3"></div>
+                  <span class="font-medium text-gray-900">${category}</span>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-sm text-gray-600 mr-2">${count} tasks</span>
+                  <div class="w-16 bg-gray-200 rounded-full h-2">
+                    <div class="${colors[index % colors.length]
+                      .replace("bg-", "bg-")
+                      .replace("-500", "-600")} h-2 rounded-full" style="width: ${Math.min(
+                  100,
+                  (count / maxCount) * 100,
+                )}%"></div>
+                  </div>
+                </div>
+              </div>
+            `,
+              )
+              .join("");
+
+            container.innerHTML = html;
+          } catch (error) {
+            console.error("Error rendering task categories list:", error);
+          }
+        }
+
+        renderDomainsList(domains) {
+          try {
+            const container = document.getElementById("domains-list");
+            if (!container) {
+              console.error("Domains list container not found");
+              return;
+            }
+
+            const entries = Object.entries(domains);
+
+            if (entries.length === 0) {
+              container.innerHTML = '<p class="text-gray-500 text-center py-4">No domain data</p>';
+              return;
+            }
+
+            // Sort by count (descending)
+            entries.sort(([, a], [, b]) => b - a);
+
+            const colors = ["bg-indigo-500", "bg-cyan-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500"];
+            const maxCount = Math.max(...Object.values(domains));
+
+            const html = entries
+              .map(
+                ([domain, count], index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 ${colors[index % colors.length]} rounded-full mr-3"></div>
+                    <span class="font-medium text-gray-900 capitalize">${domain}</span>
+                  </div>
+                  <div class="flex items-center">
+                    <span class="text-sm text-gray-600 mr-2">${count} tasks</span>
+                    <div class="w-16 bg-gray-200 rounded-full h-2">
+                      <div class="${colors[index % colors.length]
+                        .replace("bg-", "bg-")
+                        .replace("-500", "-600")} h-2 rounded-full" style="width: ${Math.min(
+                  100,
+                  (count / maxCount) * 100,
+                )}%"></div>
+                    </div>
+                  </div>
+                </div>
+              `,
+              )
+              .join("");
+
+            container.innerHTML = html;
+          } catch (error) {
+            console.error("Error rendering domains list:", error);
+          }
+        }
+
+        renderRecentSelections(recentSelections) {
+          const container = document.getElementById("recent-selections");
+
+          if (recentSelections.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-8">No recent selections</p>';
+            return;
+          }
+
+          container.innerHTML = recentSelections
+            .map(
+              (selection) => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <p class="font-medium text-gray-900">${selection.selected_persona || "Unknown"}</p>
+                <p class="text-sm text-gray-600">${selection.task_description || "No description"}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium text-gray-900">${(selection.confidence_score || 0).toFixed(2)}</p>
+                <p class="text-xs text-gray-500">${selection.task_category || "Unknown"}</p>
+              </div>
+            </div>
+          `,
+            )
+            .join("");
+        }
+
+        async testPersonaSelection() {
+          const taskDescription = document.getElementById("task-description").value;
+          const domain = document.getElementById("task-domain").value;
+
+          if (!taskDescription.trim()) {
+            alert("Please enter a task description");
+            return;
+          }
+
+          try {
+            const response = await fetch("/select", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                task_description: taskDescription,
+                domain: domain,
+              }),
+            });
+
+            if (!response.ok) throw new Error("Failed to select persona");
+
+            const result = await response.json();
+            this.showSelectionResult(result.data);
+
+            // Refresh dashboard to show new data
+            setTimeout(() => this.loadDashboard(), 1000);
+          } catch (error) {
+            console.error("Error testing persona selection:", error);
+            alert("Error testing persona selection: " + error.message);
+          }
+        }
+
+        showSelectionResult(result) {
+          const resultDiv = document.getElementById("selection-result");
+          const contentDiv = document.getElementById("result-content");
+
+          contentDiv.innerHTML = `
+            <p><strong>Selected Persona:</strong> ${result.selected_persona}</p>
+            <p><strong>Confidence Score:</strong> ${result.confidence_score.toFixed(2)}</p>
+            <p><strong>Task Category:</strong> ${result.task_category}</p>
+            <p><strong>Reasoning:</strong> ${result.reasoning || "No reasoning provided"}</p>
+          `;
+
+          resultDiv.classList.remove("hidden");
+        }
+
+        startAutoRefresh() {
+          setInterval(() => {
+            // Don't refresh while user is scrolling
+            if (this.isScrolling) {
+              return;
+            }
+
+            this.loadDashboard();
+          }, this.refreshInterval);
+        }
+
+        updateLastUpdated() {
+          const element = document.getElementById("last-updated");
+          if (this.lastUpdate) {
+            element.textContent = `Last updated: ${this.lastUpdate.toLocaleTimeString()}`;
+          }
+        }
+
+        showError(message) {
+          console.error("Dashboard error:", message);
+        }
+      }
+
+      // Initialize dashboard when DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        new PersonaDashboard();
+      });
+    </script>
+
+    <!-- Enhanced Persona Dashboard -->
+    <script type="text/babel" src="/static/dashboard-enhanced.js"></script>
+    <script type="text/babel">
+      // Check if enhanced dashboard should be used
+      const useEnhanced = window.location.search.includes("enhanced=true");
+
+      if (useEnhanced) {
+        const { createRoot } = ReactDOM;
+        const container = document.getElementById("root");
+        if (container) {
+          const root = createRoot(container);
+          root.render(<EnhancedPersonaDashboard />);
+        }
+      }
+    </script>
+  </body>
+</html>

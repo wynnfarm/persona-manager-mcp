@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persona Editor - Persona Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-800 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-3">
+          <div class="flex items-center space-x-8">
+            <a
+              href="http://localhost:8000/dashboard"
+              class="flex items-center text-gray-300 hover:text-blue-300 transition-colors"
+            >
+              <i class="fas fa-chart-line text-gray-400 mr-2"></i>
+              <span>Context Manager</span>
+            </a>
+            <a
+              href="http://localhost:8002/"
+              class="flex items-center text-gray-300 hover:text-blue-300 transition-colors"
+            >
+              <i class="fas fa-user-tie text-gray-400 mr-2"></i>
+              <span>Persona Manager</span>
+            </a>
+            <a
+              href="http://localhost:8002/editor"
+              class="flex items-center text-white hover:text-blue-300 transition-colors"
+            >
+              <i class="fas fa-edit text-blue-400 mr-2"></i>
+              <span class="font-semibold">Persona Editor</span>
+            </a>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-400">Persona Editor</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">👥 Persona Editor</h1>
+        <p class="text-sm text-gray-600 mb-6">
+          Create, edit, and manage personas for the Persona Manager system. Each persona represents a specific role or
+          expertise area.
+        </p>
+
+        <div class="flex space-x-4">
+          <button
+            id="new-persona-btn"
+            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <i class="fas fa-plus mr-2"></i>New Persona
+          </button>
+          <button
+            id="template-btn"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <i class="fas fa-copy mr-2"></i>Use Template
+          </button>
+          <button
+            id="import-btn"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <i class="fas fa-upload mr-2"></i>Import
+          </button>
+          <button
+            id="export-btn"
+            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <i class="fas fa-download mr-2"></i>Export All
+          </button>
+        </div>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">🔍 Search & Filter Personas</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <input
+              type="text"
+              id="search-input"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Search personas..."
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+            <select
+              id="domain-filter"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">All Domains</option>
+              <option value="technical">Technical</option>
+              <option value="business">Business</option>
+              <option value="creative">Creative</option>
+              <option value="educational">Educational</option>
+              <option value="design">Design</option>
+              <option value="scientific">Scientific</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Expertise</label>
+            <input
+              type="text"
+              id="expertise-filter"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Filter by expertise..."
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Limit</label>
+            <select
+              id="limit-filter"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="50">50 Results</option>
+              <option value="25">25 Results</option>
+              <option value="10">10 Results</option>
+              <option value="5">5 Results</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex space-x-4">
+          <button
+            id="search-btn"
+            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <i class="fas fa-search mr-2"></i>Search
+          </button>
+          <button
+            id="clear-filters-btn"
+            class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <i class="fas fa-times mr-2"></i>Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Persona List -->
+      <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-gray-900">📋 Existing Personas</h2>
+          <div class="text-sm text-gray-600">
+            <span id="persona-count">Loading...</span>
+          </div>
+        </div>
+        <div id="persona-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Personas will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Persona Editor Modal -->
+      <div id="persona-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+          <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-6">
+                <h3 id="modal-title" class="text-xl font-semibold text-gray-900">Edit Persona</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-times text-xl"></i>
+                </button>
+              </div>
+
+              <form id="persona-form" class="space-y-6">
+                <!-- Basic Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Persona ID</label>
+                    <input
+                      type="text"
+                      id="persona-id"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="e.g., tech_expert"
+                      required
+                    />
+                    <p class="text-xs text-gray-500 mt-1">Unique identifier (lowercase, underscores)</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                    <input
+                      type="text"
+                      id="persona-name"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="e.g., Tech Expert"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea
+                    id="persona-description"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Describe what this persona does and when to use it..."
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- Expertise -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Areas of Expertise</label>
+                  <div id="expertise-container" class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        class="expertise-input flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="e.g., Python Programming"
+                      />
+                      <button type="button" class="remove-expertise text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <button type="button" id="add-expertise" class="mt-2 text-purple-600 hover:text-purple-700 text-sm">
+                    <i class="fas fa-plus mr-1"></i>Add Expertise Area
+                  </button>
+                </div>
+
+                <!-- Communication Style -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Communication Style</label>
+                  <input
+                    type="text"
+                    id="communication-style"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="e.g., Professional and technical"
+                    required
+                  />
+                </div>
+
+                <!-- Context -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">When to Use</label>
+                  <textarea
+                    id="persona-context"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Describe when this persona should be selected..."
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- Personality Traits -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Personality Traits</label>
+                  <div id="traits-container" class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        class="trait-input flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="e.g., analytical"
+                      />
+                      <button type="button" class="remove-trait text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <button type="button" id="add-trait" class="mt-2 text-purple-600 hover:text-purple-700 text-sm">
+                    <i class="fas fa-plus mr-1"></i>Add Personality Trait
+                  </button>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 pt-6 border-t">
+                  <button
+                    type="button"
+                    id="cancel-btn"
+                    class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    id="save-btn"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Save Persona
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Template Selection Modal -->
+      <div id="template-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+          <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-900">Choose a Template</h3>
+                <button id="close-template-modal" class="text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-times text-xl"></i>
+                </button>
+              </div>
+
+              <div id="template-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Templates will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      class PersonaEditor {
+        constructor() {
+          this.personas = {};
+          this.currentPersona = null;
+          this.init();
+        }
+
+        async init() {
+          this.setupEventListeners();
+          await this.loadPersonas();
+          this.renderPersonaList();
+        }
+
+        setupEventListeners() {
+          // New persona button
+          document.getElementById("new-persona-btn").addEventListener("click", () => {
+            this.openModal();
+          });
+
+          // Close modal
+          document.getElementById("close-modal").addEventListener("click", () => {
+            this.closeModal();
+          });
+
+          document.getElementById("cancel-btn").addEventListener("click", () => {
+            this.closeModal();
+          });
+
+          // Form submission
+          document.getElementById("persona-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            this.savePersona();
+          });
+
+          // Add expertise/trait buttons
+          document.getElementById("add-expertise").addEventListener("click", () => {
+            this.addExpertiseField();
+          });
+
+          document.getElementById("add-trait").addEventListener("click", () => {
+            this.addTraitField();
+          });
+
+          // Export button
+          document.getElementById("export-btn").addEventListener("click", () => {
+            this.exportPersonas();
+          });
+
+          // Import button
+          document.getElementById("import-btn").addEventListener("click", () => {
+            this.importPersonas();
+          });
+
+          // Search functionality
+          document.getElementById("search-btn").addEventListener("click", () => {
+            this.searchPersonas();
+          });
+
+          document.getElementById("clear-filters-btn").addEventListener("click", () => {
+            this.clearFilters();
+          });
+
+          // Search on Enter key
+          document.getElementById("search-input").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              this.searchPersonas();
+            }
+          });
+
+          // Template functionality
+          document.getElementById("template-btn").addEventListener("click", () => {
+            this.openTemplateModal();
+          });
+
+          document.getElementById("close-template-modal").addEventListener("click", () => {
+            this.closeTemplateModal();
+          });
+        }
+
+        async loadPersonas(filters = {}) {
+          try {
+            const params = new URLSearchParams();
+            if (filters.search) params.append("search", filters.search);
+            if (filters.domain) params.append("domain", filters.domain);
+            if (filters.expertise) params.append("expertise", filters.expertise);
+            if (filters.limit) params.append("limit", filters.limit);
+
+            const response = await fetch(`/personas?${params.toString()}`);
+            const data = await response.json();
+            this.personas = data.data.personas || {};
+
+            // Update count display
+            document.getElementById(
+              "persona-count",
+            ).textContent = `${data.data.count} of ${data.data.total_available} personas`;
+          } catch (error) {
+            console.error("Error loading personas:", error);
+            this.showError("Failed to load personas");
+          }
+        }
+
+        searchPersonas() {
+          const search = document.getElementById("search-input").value.trim();
+          const domain = document.getElementById("domain-filter").value;
+          const expertise = document.getElementById("expertise-filter").value.trim();
+          const limit = document.getElementById("limit-filter").value;
+
+          const filters = {};
+          if (search) filters.search = search;
+          if (domain) filters.domain = domain;
+          if (expertise) filters.expertise = expertise;
+          if (limit) filters.limit = limit;
+
+          this.loadPersonas(filters);
+        }
+
+        clearFilters() {
+          document.getElementById("search-input").value = "";
+          document.getElementById("domain-filter").value = "";
+          document.getElementById("expertise-filter").value = "";
+          document.getElementById("limit-filter").value = "50";
+
+          this.loadPersonas();
+        }
+
+        async openTemplateModal() {
+          const modal = document.getElementById("template-modal");
+          modal.classList.remove("hidden");
+          await this.loadTemplates();
+        }
+
+        closeTemplateModal() {
+          document.getElementById("template-modal").classList.add("hidden");
+        }
+
+        async loadTemplates() {
+          try {
+            const response = await fetch("/templates");
+            const data = await response.json();
+            this.renderTemplates(data.data.templates);
+          } catch (error) {
+            console.error("Error loading templates:", error);
+            this.showError("Failed to load templates");
+          }
+        }
+
+        renderTemplates(templates) {
+          const container = document.getElementById("template-grid");
+          container.innerHTML = Object.entries(templates)
+            .map(
+              ([id, template]) => `
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer" onclick="personaEditor.useTemplate('${id}')">
+                        <h3 class="font-semibold text-gray-900 mb-2">${template.name}</h3>
+                        <p class="text-sm text-gray-600 mb-3">${template.description}</p>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${template.expertise
+                              .slice(0, 3)
+                              .map(
+                                (exp) =>
+                                  `<span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">${exp}</span>`,
+                              )
+                              .join("")}
+                            ${
+                              template.expertise.length > 3
+                                ? `<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">+${
+                                    template.expertise.length - 3
+                                  } more</span>`
+                                : ""
+                            }
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span class="font-medium">Style:</span> ${template.communication_style}
+                        </div>
+                    </div>
+                `,
+            )
+            .join("");
+        }
+
+        async useTemplate(templateId) {
+          try {
+            const response = await fetch("/templates");
+            const data = await response.json();
+            const template = data.data.templates[templateId];
+
+            if (template) {
+              this.closeTemplateModal();
+              this.openModal();
+              this.populateFormFromTemplate(template);
+            }
+          } catch (error) {
+            console.error("Error using template:", error);
+            this.showError("Failed to load template");
+          }
+        }
+
+        populateFormFromTemplate(template) {
+          // Generate a unique ID based on template
+          const timestamp = Date.now();
+          const baseId = template.name.toLowerCase().replace(/\s+/g, "_");
+          const uniqueId = `${baseId}_${timestamp}`;
+
+          document.getElementById("persona-id").value = uniqueId;
+          document.getElementById("persona-name").value = template.name;
+          document.getElementById("persona-description").value = template.description;
+          document.getElementById("communication-style").value = template.communication_style;
+          document.getElementById("persona-context").value = template.context;
+
+          // Populate expertise
+          this.populateList("expertise-container", "expertise-input", template.expertise);
+
+          // Populate traits
+          this.populateList("traits-container", "trait-input", template.personality_traits);
+        }
+
+        renderPersonaList() {
+          const container = document.getElementById("persona-list");
+          const personas = Object.entries(this.personas);
+
+          if (personas.length === 0) {
+            container.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-500">No personas found. Create your first persona to get started.</p>
+                        </div>
+                    `;
+            return;
+          }
+
+          container.innerHTML = personas
+            .map(
+              ([id, persona]) => `
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-purple-300 transition-colors">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-semibold text-gray-900">${persona.name}</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="personaEditor.editPersona('${id}')" class="text-blue-600 hover:text-blue-700">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="personaEditor.deletePersona('${id}')" class="text-red-600 hover:text-red-700">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">${persona.description}</p>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${(persona.expertise || [])
+                              .slice(0, 3)
+                              .map(
+                                (exp) =>
+                                  `<span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">${exp}</span>`,
+                              )
+                              .join("")}
+                            ${
+                              (persona.expertise || []).length > 3
+                                ? `<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">+${
+                                    (persona.expertise || []).length - 3
+                                  } more</span>`
+                                : ""
+                            }
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span class="font-medium">Style:</span> ${persona.communication_style || "Not specified"}
+                        </div>
+                    </div>
+                `,
+            )
+            .join("");
+        }
+
+        openModal(personaId = null) {
+          this.currentPersona = personaId ? this.personas[personaId] : null;
+          const modal = document.getElementById("persona-modal");
+          const title = document.getElementById("modal-title");
+
+          title.textContent = personaId ? "Edit Persona" : "Create New Persona";
+          modal.classList.remove("hidden");
+
+          if (this.currentPersona) {
+            this.populateForm(this.currentPersona);
+          } else {
+            this.clearForm();
+          }
+        }
+
+        closeModal() {
+          document.getElementById("persona-modal").classList.add("hidden");
+          this.currentPersona = null;
+        }
+
+        populateForm(persona) {
+          document.getElementById("persona-id").value = persona.id || "";
+          document.getElementById("persona-name").value = persona.name || "";
+          document.getElementById("persona-description").value = persona.description || "";
+          document.getElementById("communication-style").value = persona.communication_style || "";
+          document.getElementById("persona-context").value = persona.context || "";
+
+          // Populate expertise
+          this.populateList("expertise-container", "expertise-input", persona.expertise || []);
+
+          // Populate traits
+          this.populateList("traits-container", "trait-input", persona.personality_traits || []);
+        }
+
+        populateList(containerId, inputClass, items) {
+          const container = document.getElementById(containerId);
+          container.innerHTML = "";
+
+          items.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "flex items-center space-x-2";
+            div.innerHTML = `
+                        <input type="text" class="${inputClass} flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="${item}">
+                        <button type="button" class="remove-${inputClass.replace(
+                          "-input",
+                          "",
+                        )} text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+            container.appendChild(div);
+          });
+
+          if (items.length === 0) {
+            this.addListField(containerId, inputClass);
+          }
+        }
+
+        clearForm() {
+          document.getElementById("persona-form").reset();
+          document.getElementById("expertise-container").innerHTML = "";
+          document.getElementById("traits-container").innerHTML = "";
+          this.addExpertiseField();
+          this.addTraitField();
+        }
+
+        addExpertiseField() {
+          this.addListField("expertise-container", "expertise-input");
+        }
+
+        addTraitField() {
+          this.addListField("traits-container", "trait-input");
+        }
+
+        addListField(containerId, inputClass) {
+          const container = document.getElementById(containerId);
+          const div = document.createElement("div");
+          div.className = "flex items-center space-x-2";
+          div.innerHTML = `
+                    <input type="text" class="${inputClass} flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter item...">
+                    <button type="button" class="remove-${inputClass.replace(
+                      "-input",
+                      "",
+                    )} text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+          container.appendChild(div);
+        }
+
+        async savePersona() {
+          const formData = this.getFormData();
+
+          if (!formData.id || !formData.name) {
+            this.showError("Persona ID and Name are required");
+            return;
+          }
+
+          try {
+            const response = await fetch(`/personas/${formData.id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+              await this.loadPersonas();
+              this.renderPersonaList();
+              this.closeModal();
+              this.showSuccess("Persona saved successfully");
+            } else {
+              const error = await response.json();
+              this.showError(error.detail || "Failed to save persona");
+            }
+          } catch (error) {
+            console.error("Error saving persona:", error);
+            this.showError("Failed to save persona");
+          }
+        }
+
+        getFormData() {
+          const expertise = Array.from(document.querySelectorAll(".expertise-input"))
+            .map((input) => input.value.trim())
+            .filter((value) => value.length > 0);
+
+          const traits = Array.from(document.querySelectorAll(".trait-input"))
+            .map((input) => input.value.trim())
+            .filter((value) => value.length > 0);
+
+          return {
+            id: document.getElementById("persona-id").value.trim(),
+            name: document.getElementById("persona-name").value.trim(),
+            description: document.getElementById("persona-description").value.trim(),
+            expertise: expertise,
+            communication_style: document.getElementById("communication-style").value.trim(),
+            context: document.getElementById("persona-context").value.trim(),
+            personality_traits: traits,
+            created_at: this.currentPersona ? this.currentPersona.created_at : new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+        }
+
+        async deletePersona(personaId) {
+          if (!confirm(`Are you sure you want to delete the persona "${this.personas[personaId].name}"?`)) {
+            return;
+          }
+
+          try {
+            const response = await fetch(`/personas/${personaId}`, {
+              method: "DELETE",
+            });
+
+            if (response.ok) {
+              await this.loadPersonas();
+              this.renderPersonaList();
+              this.showSuccess("Persona deleted successfully");
+            } else {
+              this.showError("Failed to delete persona");
+            }
+          } catch (error) {
+            console.error("Error deleting persona:", error);
+            this.showError("Failed to delete persona");
+          }
+        }
+
+        editPersona(personaId) {
+          this.openModal(personaId);
+        }
+
+        exportPersonas() {
+          const dataStr = JSON.stringify(this.personas, null, 2);
+          const dataBlob = new Blob([dataStr], { type: "application/json" });
+          const url = URL.createObjectURL(dataBlob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "personas.json";
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+
+        importPersonas() {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = ".json";
+          input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              try {
+                const text = await file.text();
+                const personas = JSON.parse(text);
+                // TODO: Implement import functionality
+                this.showSuccess("Import functionality coming soon");
+              } catch (error) {
+                this.showError("Invalid JSON file");
+              }
+            }
+          };
+          input.click();
+        }
+
+        showSuccess(message) {
+          // Simple success notification
+          alert(message);
+        }
+
+        showError(message) {
+          // Simple error notification
+          alert("Error: " + message);
+        }
+      }
+
+      // Initialize the persona editor
+      const personaEditor = new PersonaEditor();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+# MCP Python SDK
+mcp>=1.0.0
+
+# HTTP client for context integration
+requests>=2.31.0
+
+# Web framework for the server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# Data handling and validation
+pydantic>=2.0.0
+jsonschema>=4.19.0
+
+# File operations and data persistence
+pyyaml>=6.0
+python-json-logger>=2.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Development tools
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Optional: For enhanced persona matching
+scikit-learn>=1.3.0
+numpy>=1.24.0
+
+# HTTP client for context manager service
+requests>=2.31.0

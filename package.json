@@ -1,0 +1,50 @@
+{
+  "name": "persona-manager-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Persona Manager",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && chmod 755 dist/index.js",
+    "format": "prettier --write .",
+    "lint": "eslint \"**/*.{js,ts,tsx}\" --fix",
+    "lint:check": "eslint \"**/*.{js,ts,tsx}\"",
+    "start": "node dist/index.js --transport http",
+    "dev": "ts-node src/index.ts --transport stdio"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/persona-manager-mcp.git"
+  },
+  "keywords": [
+    "modelcontextprotocol",
+    "mcp",
+    "persona-manager"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "persona-manager-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "commander": "^14.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.5",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0",
+    "ts-node": "^10.9.2"
+  }
+}
+

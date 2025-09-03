@@ -386,6 +386,136 @@ function createServerInstance() {
     },
   );
 
+  // NEW TOOL: Get task template for a persona
+  server.tool(
+    "get_task_template",
+    {
+      persona_id: z.string().describe("ID of the persona"),
+      task_type: z.string().describe("Type of task template to retrieve"),
+    },
+    async ({ persona_id, task_type }) => {
+      const template = personaStorage.getTaskTemplate(persona_id, task_type);
+      if (template) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, template }, null, 2),
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: `Task template '${task_type}' not found for persona '${persona_id}'` }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // NEW TOOL: Get communication guidelines for a persona
+  server.tool(
+    "get_communication_guidelines",
+    {
+      persona_id: z.string().describe("ID of the persona"),
+    },
+    async ({ persona_id }) => {
+      const guidelines = personaStorage.getCommunicationGuidelines(persona_id);
+      if (guidelines) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, guidelines }, null, 2),
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: `Communication guidelines not found for persona '${persona_id}'` }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // NEW TOOL: Get expertise details for a persona
+  server.tool(
+    "get_expertise_details",
+    {
+      persona_id: z.string().describe("ID of the persona"),
+    },
+    async ({ persona_id }) => {
+      const expertise = personaStorage.getExpertiseDetails(persona_id);
+      if (expertise) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, expertise }, null, 2),
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: `Expertise details not found for persona '${persona_id}'` }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  // NEW TOOL: Get detailed persona instructions
+  server.tool(
+    "get_persona_instructions",
+    {
+      persona_id: z.string().describe("ID of the persona"),
+    },
+    async ({ persona_id }) => {
+      const persona = personaStorage.getPersona(persona_id);
+      if (persona) {
+        const instructions = {
+          detailed_instructions: persona.detailed_instructions,
+          behavior_patterns: persona.behavior_patterns,
+          conversation_starters: persona.conversation_starters,
+          response_templates: persona.response_templates,
+          decision_frameworks: persona.decision_frameworks,
+          role_specific_instructions: persona.role_specific_instructions,
+        };
+        
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, instructions }, null, 2),
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: false, error: `Persona with ID '${persona_id}' not found` }, null, 2),
+            },
+          ],
+        };
+      }
+    },
+  );
+
   return server;
 }
 

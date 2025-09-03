@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { z } from 'zod';
 
-// Persona schema validation
+// Enhanced persona schema with detailed instructions and behavior patterns
 export const PersonaSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -13,6 +13,35 @@ export const PersonaSchema = z.object({
   personality_traits: z.array(z.string()).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  
+  // NEW: Enhanced fields for better task performance
+  detailed_instructions: z.string().optional().describe("Detailed instructions on how this persona should behave and approach tasks"),
+  behavior_patterns: z.array(z.string()).optional().describe("Specific behavior patterns and approaches this persona should follow"),
+  conversation_starters: z.array(z.string()).optional().describe("Example conversation starters this persona might use"),
+  response_templates: z.array(z.string()).optional().describe("Template responses for common scenarios"),
+  decision_frameworks: z.array(z.string()).optional().describe("Decision-making frameworks this persona should use"),
+  task_templates: z.record(z.string(), z.object({
+    description: z.string(),
+    steps: z.array(z.string()),
+    best_practices: z.array(z.string()),
+    common_pitfalls: z.array(z.string()),
+    success_metrics: z.array(z.string()),
+  })).optional().describe("Pre-defined task templates for common scenarios"),
+  expertise_details: z.record(z.string(), z.object({
+    proficiency_level: z.enum(["beginner", "intermediate", "advanced", "expert"]),
+    sub_skills: z.array(z.string()),
+    tools: z.array(z.string()),
+    methodologies: z.array(z.string()),
+  })).optional().describe("Detailed breakdown of expertise areas"),
+  communication_guidelines: z.object({
+    tone: z.string(),
+    approach: z.string(),
+    formality_level: z.enum(["casual", "professional", "formal", "technical"]),
+    preferred_examples: z.boolean(),
+    explanation_style: z.enum(["detailed", "concise", "step-by-step", "conceptual"]),
+    response_length: z.enum(["brief", "moderate", "comprehensive"]),
+  }).optional().describe("Detailed communication preferences"),
+  role_specific_instructions: z.string().optional().describe("Role-specific instructions for this persona's domain"),
 });
 
 export type Persona = z.infer<typeof PersonaSchema>;
@@ -21,6 +50,7 @@ export type Persona = z.infer<typeof PersonaSchema>;
 const PERSONAS_DIR = join(process.cwd(), 'personas');
 const PERSONAS_FILE = join(PERSONAS_DIR, 'personas.json');
 const DEFAULT_PERSONAS_FILE = join(PERSONAS_DIR, 'default_personas.json');
+const ENHANCED_DEFAULT_PERSONAS_FILE = join(PERSONAS_DIR, 'enhanced_default_personas.json');
 
 export class PersonaStorage {
   private personas: Map<string, Persona> = new Map();
@@ -73,6 +103,28 @@ export class PersonaStorage {
 
   // Load default personas as fallback
   private async loadDefaultPersonas(): Promise<void> {
+    try {
+      // Try enhanced personas first
+      const enhancedData = await fs.readFile(ENHANCED_DEFAULT_PERSONAS_FILE, 'utf-8');
+      const enhancedParsed = JSON.parse(enhancedData);
+      
+      if (enhancedParsed.personas && typeof enhancedParsed.personas === 'object') {
+        this.personas.clear();
+        for (const [id, personaData] of Object.entries(enhancedParsed.personas)) {
+          try {
+            const persona = PersonaSchema.parse({ id, ...personaData as any });
+            this.personas.set(id, persona);
+          } catch (error) {
+            console.error(`⚠️ Skipping invalid enhanced persona ${id}:`, error);
+          }
+        }
+        console.error(`📁 Loaded ${this.personas.size} enhanced personas`);
+        return;
+      }
+    } catch (error) {
+      console.error('⚠️ Enhanced personas not found, trying regular defaults:', error);
+    }
+
     try {
       const data = await fs.readFile(DEFAULT_PERSONAS_FILE, 'utf-8');
       const parsed = JSON.parse(data);
@@ -263,5 +315,26 @@ export class PersonaStorage {
       persona.description.toLowerCase().includes(searchTerm) ||
       persona.expertise.some(exp => exp.toLowerCase().includes(searchTerm))
     );
+  }
+
+  // NEW: Get task template for a persona
+  getTaskTemplate(personaId: string, taskType: string): any {
+    const persona = this.personas.get(personaId);
+    if (!persona || !persona.task_templates) {
+      return null;
+    }
+    return persona.task_templates[taskType] || null;
+  }
+
+  // NEW: Get communication guidelines for a persona
+  getCommunicationGuidelines(personaId: string): any {
+    const persona = this.personas.get(personaId);
+    return persona?.communication_guidelines || null;
+  }
+
+  // NEW: Get expertise details for a persona
+  getExpertiseDetails(personaId: string): any {
+    const persona = this.personas.get(personaId);
+    return persona?.expertise_details || null;
   }
 }

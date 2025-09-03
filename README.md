@@ -164,6 +164,31 @@ Get a specific persona by ID.
 **Parameters:**
 - `persona_id` (string, required): ID of the persona to retrieve
 
+### `get_task_template` ✨ NEW
+Get a specific task template for a persona.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona
+- `task_type` (string, required): Type of task template (e.g., "code_review", "system_design", "story_creation")
+
+### `get_communication_guidelines` ✨ NEW
+Get detailed communication guidelines for a persona.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona
+
+### `get_expertise_details` ✨ NEW
+Get detailed expertise breakdown for a persona.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona
+
+### `get_persona_instructions` ✨ NEW
+Get comprehensive instructions and behavior patterns for a persona.
+
+**Parameters:**
+- `persona_id` (string, required): ID of the persona
+
 ## 🎭 Global Persona Echo
 
 The Persona Manager includes a global echo feature that automatically displays which persona is currently active. When a persona is selected or used, it will echo:
@@ -207,6 +232,71 @@ search_personas --query "machine learning"
 
 # Delete a persona
 delete_persona --persona_id "old-persona"
+```
+
+## 🚀 Enhanced Persona Capabilities ✨ NEW
+
+The Persona Manager now includes **enhanced personas** with detailed instructions, behavior patterns, and task templates for superior task performance:
+
+### **🎯 Detailed Instructions & Behavior Patterns**
+- **Comprehensive Guidelines**: Each persona includes detailed instructions on how to behave and approach tasks
+- **Behavior Patterns**: Specific patterns and approaches each persona should follow
+- **Conversation Starters**: Example conversation starters for different scenarios
+- **Response Templates**: Template responses for common situations
+- **Decision Frameworks**: Structured decision-making approaches
+
+### **📋 Task Templates & Best Practices**
+- **Pre-defined Templates**: Step-by-step guides for common tasks
+- **Best Practices**: Industry-standard approaches and methodologies
+- **Common Pitfalls**: What to avoid and potential challenges
+- **Success Metrics**: How to measure success and effectiveness
+
+### **🔧 Enhanced Expertise Details**
+- **Proficiency Levels**: Beginner to expert ratings for each skill
+- **Sub-skills**: Detailed breakdown of expertise areas
+- **Tools & Technologies**: Specific tools and technologies to use
+- **Methodologies**: Industry-standard approaches and frameworks
+
+### **💬 Communication Guidelines**
+- **Tone & Approach**: Specific communication preferences
+- **Formality Levels**: Casual to formal communication styles
+- **Explanation Styles**: How to explain concepts (detailed, concise, step-by-step)
+- **Response Length**: Preferred response length and detail level
+
+### **📊 Example Enhanced Personas**
+
+#### **Tech Expert** 🖥️
+- **Task Templates**: Code review, system design, debugging
+- **Expertise Details**: Python (expert), Machine Learning (advanced), Software Architecture (expert)
+- **Communication**: Professional, systematic, step-by-step explanations
+- **Tools**: Django, Flask, TensorFlow, Docker, AWS
+
+#### **Creative Writer** ✍️
+- **Task Templates**: Story creation, brand voice development
+- **Expertise Details**: Creative Writing (expert), Marketing Copy (advanced)
+- **Communication**: Engaging, story-driven, emotional connections
+- **Methodologies**: Three-Act Structure, AIDA, Show Don't Tell
+
+#### **Business Analyst** 📊
+- **Task Templates**: Business analysis, market research
+- **Expertise Details**: Business Analysis (expert), Data Analysis (advanced)
+- **Communication**: Strategic, data-driven, comprehensive analysis
+- **Frameworks**: SWOT analysis, Cost-benefit analysis, ROI calculation
+
+### **🎯 Usage Examples**
+
+```bash
+# Get task template for code review
+get_task_template --persona_id "tech_expert" --task_type "code_review"
+
+# Get communication guidelines
+get_communication_guidelines --persona_id "creative_writer"
+
+# Get detailed instructions
+get_persona_instructions --persona_id "business_analyst"
+
+# Get expertise breakdown
+get_expertise_details --persona_id "tech_expert"
 ```
 
 ## 📁 Project Structure

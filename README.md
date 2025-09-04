@@ -189,6 +189,44 @@ Get comprehensive instructions and behavior patterns for a persona.
 **Parameters:**
 - `persona_id` (string, required): ID of the persona
 
+### `recommend_persona_for_task` ✨ NEW
+Analyze task descriptions and recommend the best persona based on expertise matching.
+
+**Parameters:**
+- `task_description` (string, required): Detailed description of the task to be performed
+- `task_type` (string, optional): Task type category (e.g., "coding", "writing", "analysis")
+- `complexity_level` (string, optional): Task complexity level ("simple", "moderate", "complex", "expert")
+- `domain` (string, optional): Domain or industry context
+
+## 🎯 AI-Powered Task Matching
+
+The Persona Manager now includes intelligent task-to-persona matching that analyzes task descriptions and recommends the best persona based on:
+
+### **Smart Matching Algorithm**
+- **Expertise Matching**: Direct and partial word matching with persona expertise areas
+- **Task Template Analysis**: Checks for relevant task templates in persona definitions
+- **Domain Context**: Considers industry and domain-specific requirements
+- **Complexity Assessment**: Matches task complexity with persona proficiency levels
+- **Keyword Analysis**: Identifies task-specific keywords in detailed instructions
+
+### **Recommendation Features**
+- **Confidence Scoring**: Each recommendation includes a confidence score (0-100%)
+- **Multiple Options**: Provides top 3 recommendations with reasoning
+- **Detailed Analysis**: Explains why each persona is recommended
+- **Alternative Suggestions**: Offers backup options if primary recommendations don't fit
+
+### **Example Usage**
+```json
+{
+  "task_description": "Debug a complex Python application with performance issues",
+  "task_type": "debugging",
+  "complexity_level": "complex",
+  "domain": "software development"
+}
+```
+
+**Result**: Recommends Tech Expert with 85% confidence, highlighting Python expertise and debugging templates.
+
 ## 🎭 Global Persona Echo
 
 The Persona Manager includes a global echo feature that automatically displays which persona is currently active. When a persona is selected or used, it will echo:

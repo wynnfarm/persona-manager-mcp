@@ -46,6 +46,29 @@ export const PersonaSchema = z.object({
 
 export type Persona = z.infer<typeof PersonaSchema>;
 
+// Add task recommendation interfaces
+export interface TaskRecommendationRequest {
+  task_description: string;
+  task_type?: string;
+  complexity_level?: 'simple' | 'moderate' | 'complex' | 'expert';
+  domain?: string;
+}
+
+export interface TaskRecommendation {
+  persona_id: string;
+  persona_name: string;
+  confidence_score: number;
+  matching_expertise: string[];
+  reasoning: string;
+}
+
+export interface TaskRecommendationResult {
+  recommendations: TaskRecommendation[];
+  analysis: string;
+  confidence_score: number;
+  reasoning: string;
+}
+
 // Storage configuration
 const PERSONAS_DIR = join(process.cwd(), 'personas');
 const PERSONAS_FILE = join(PERSONAS_DIR, 'personas.json');
@@ -337,4 +360,206 @@ export class PersonaStorage {
     const persona = this.personas.get(personaId);
     return persona?.expertise_details || null;
   }
+
+  // AI-powered task matching
+  async recommendPersonaForTask(request: TaskRecommendationRequest): Promise<TaskRecommendationResult> {
+    const { task_description, task_type, complexity_level, domain } = request;
+    
+    // Convert task description to lowercase for matching
+    const taskLower = task_description.toLowerCase();
+    const taskWords = taskLower.split(/\s+/);
+    
+    const recommendations: TaskRecommendation[] = [];
+    
+    // Score each persona based on expertise matching
+    for (const [id, persona] of this.personas) {
+      let score = 0;
+      const matchingExpertise: string[] = [];
+      
+      // Check expertise areas
+      if (persona.expertise) {
+        for (const expertise of persona.expertise) {
+          const expertiseLower = expertise.toLowerCase();
+          
+          // Direct expertise match
+          if (taskLower.includes(expertiseLower)) {
+            score += 10;
+            matchingExpertise.push(expertise);
+          }
+          
+          // Partial word match
+          const expertiseWords = expertiseLower.split(/\s+/);
+          for (const word of expertiseWords) {
+            if (word.length > 3 && taskWords.includes(word)) {
+              score += 5;
+              if (!matchingExpertise.includes(expertise)) {
+                matchingExpertise.push(expertise);
+              }
+            }
+          }
+        }
+      }
+      
+      // Check detailed instructions for task-specific keywords
+      if (persona.detailed_instructions) {
+        const instructionsLower = persona.detailed_instructions.toLowerCase();
+        
+        // Task-specific keywords
+        const taskKeywords = ['code', 'programming', 'debug', 'design', 'analyze', 'write', 'create', 'build', 'test'];
+        for (const keyword of taskKeywords) {
+          if (taskLower.includes(keyword) && instructionsLower.includes(keyword)) {
+            score += 3;
+          }
+        }
+      }
+      
+      // Check task templates
+      if (persona.task_templates) {
+        for (const [templateName, template] of Object.entries(persona.task_templates)) {
+          const templateLower = templateName.toLowerCase();
+          if (taskLower.includes(templateLower) || taskLower.includes(template.description.toLowerCase())) {
+            score += 8;
+          }
+        }
+      }
+      
+      // Domain matching
+      if (domain && persona.context) {
+        const contextLower = persona.context.toLowerCase();
+        const domainLower = domain.toLowerCase();
+        if (contextLower.includes(domainLower) || domainLower.includes(contextLower)) {
+          score += 5;
+        }
+      }
+      
+      // Task type matching
+      if (task_type) {
+        const taskTypeLower = task_type.toLowerCase();
+        if (persona.expertise?.some(exp => exp.toLowerCase().includes(taskTypeLower))) {
+          score += 6;
+        }
+      }
+      
+      // Complexity level matching
+      if (complexity_level && persona.expertise_details) {
+        const complexityScores = {
+          'simple': 1,
+          'moderate': 2,
+          'complex': 3,
+          'expert': 4,
+        };
+        
+        const avgProficiency = Object.values(persona.expertise_details)
+          .map(detail => {
+            const levelScores = { 'beginner': 1, 'intermediate': 2, 'advanced': 3, 'expert': 4 };
+            return levelScores[detail.proficiency_level] || 2;
+          })
+          .reduce((a, b) => a + b, 0) / Object.keys(persona.expertise_details).length;
+        
+        const targetComplexity = complexityScores[complexity_level];
+        const complexityMatch = Math.max(0, 5 - Math.abs(avgProficiency - targetComplexity));
+        score += complexityMatch;
+      }
+      
+      // Only include personas with meaningful matches
+      if (score > 0) {
+        recommendations.push({
+          persona_id: id,
+          persona_name: persona.name,
+          confidence_score: Math.min(score, 100) / 100, // Normalize to 0-1
+          matching_expertise: matchingExpertise,
+          reasoning: this.generateRecommendationReasoning(persona, matchingExpertise, score),
+        });
+      }
+    }
+    
+    // Sort by confidence score (highest first)
+    recommendations.sort((a, b) => b.confidence_score - a.confidence_score);
+    
+    // Take top 3 recommendations
+    const topRecommendations = recommendations.slice(0, 3);
+    
+    // Generate overall analysis
+    const analysis = this.generateTaskAnalysis(request, topRecommendations);
+    const overallConfidence = topRecommendations.length > 0 ? topRecommendations[0].confidence_score : 0;
+    const reasoning = this.generateOverallReasoning(request, topRecommendations);
+    
+    return {
+      recommendations: topRecommendations,
+      analysis,
+      confidence_score: overallConfidence,
+      reasoning,
+    };
+  }
+  
+  private generateRecommendationReasoning(persona: Persona, matchingExpertise: string[], score: number): string {
+    const reasons: string[] = [];
+    
+    if (matchingExpertise.length > 0) {
+      reasons.push(`Matches expertise in: ${matchingExpertise.join(', ')}`);
+    }
+    
+    if (persona.detailed_instructions) {
+      reasons.push('Has detailed task-specific instructions');
+    }
+    
+    if (persona.task_templates && Object.keys(persona.task_templates).length > 0) {
+      reasons.push(`Has ${Object.keys(persona.task_templates).length} task templates available`);
+    }
+    
+    if (persona.expertise_details && Object.keys(persona.expertise_details).length > 0) {
+      reasons.push('Has detailed expertise breakdown');
+    }
+    
+    return reasons.join('. ');
+  }
+  
+  private generateTaskAnalysis(request: TaskRecommendationRequest, recommendations: TaskRecommendation[]): string {
+    const { task_description, task_type, complexity_level, domain } = request;
+    
+    let analysis = `Task: "${task_description}"`;
+    
+    if (task_type) {
+      analysis += `\nType: ${task_type}`;
+    }
+    
+    if (complexity_level) {
+      analysis += `\nComplexity: ${complexity_level}`;
+    }
+    
+    if (domain) {
+      analysis += `\nDomain: ${domain}`;
+    }
+    
+    analysis += `\n\nFound ${recommendations.length} suitable personas with confidence scores:`;
+    
+    for (const rec of recommendations) {
+      analysis += `\n- ${rec.persona_name} (${Math.round(rec.confidence_score * 100)}%)`;
+    }
+    
+    return analysis;
+  }
+  
+  private generateOverallReasoning(request: TaskRecommendationRequest, recommendations: TaskRecommendation[]): string {
+    if (recommendations.length === 0) {
+      return "No personas found that match the task requirements. Consider creating a new persona or broadening the task description.";
+    }
+    
+    const topRec = recommendations[0];
+    let reasoning = `Top recommendation: ${topRec.persona_name} with ${Math.round(topRec.confidence_score * 100)}% confidence. `;
+    
+    if (topRec.matching_expertise.length > 0) {
+      reasoning += `This persona excels in: ${topRec.matching_expertise.join(', ')}. `;
+    }
+    
+    reasoning += topRec.reasoning;
+    
+    if (recommendations.length > 1) {
+      reasoning += `\n\nAlternative options: ${recommendations.slice(1).map(r => r.persona_name).join(', ')}`;
+    }
+    
+    return reasoning;
+  }
 }
+
+// ... existing code ...

@@ -4,7 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { Command } from "commander";
-import { PersonaStorage, Persona } from "./storage.js";
+import { PersonaStorage, Persona, TaskRecommendationRequest, TaskRecommendationResult } from "./storage.js";
 
 // Parse CLI arguments using commander
 const program = new Command()
@@ -512,6 +512,44 @@ function createServerInstance() {
             },
           ],
         };
+      }
+    },
+  );
+
+  // Add new tool for AI-powered task matching
+  server.tool(
+    "recommend_persona_for_task",
+    {
+      task_description: z.string().describe("Detailed description of the task to be performed"),
+      task_type: z.string().optional().describe("Optional task type category (e.g., 'coding', 'writing', 'analysis')"),
+      complexity_level: z.enum(["simple", "moderate", "complex", "expert"]).optional().describe("Task complexity level"),
+      domain: z.string().optional().describe("Optional domain or industry context"),
+    },
+    async ({ task_description, task_type, complexity_level, domain }) => {
+      try {
+        const recommendations = await personaStorage.recommendPersonaForTask({
+          task_description,
+          task_type,
+          complexity_level,
+          domain,
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                recommendations: recommendations.recommendations,
+                analysis: recommendations.analysis,
+                confidence_score: recommendations.confidence_score,
+                reasoning: recommendations.reasoning,
+              }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        console.error("Error recommending persona for task:", error);
+        throw new Error(`Failed to recommend persona: ${error}`);
       }
     },
   );
